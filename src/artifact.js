@@ -23,7 +23,6 @@ import {
 
 const GOLD = 0xb9954b;
 const GRAPHITE = 0x111418;
-const IVORY = 0xe7e1d4;
 const SIGNAL = 0xa1ffcb;
 
 const OUTER_POINTS = [
@@ -98,7 +97,6 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   const materials = {
     edge: new MeshStandardMaterial({ color: GOLD, metalness: 0.88, roughness: 0.22 }),
     face: new MeshStandardMaterial({ color: GRAPHITE, metalness: 0.58, roughness: 0.3 }),
-    ivory: new MeshStandardMaterial({ color: IVORY, metalness: 0.18, roughness: 0.35 }),
     signal: new MeshStandardMaterial({ color: SIGNAL, emissive: SIGNAL, emissiveIntensity: 1.6, roughness: 0.28 }),
   };
 
@@ -125,14 +123,13 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
     return mesh;
   };
 
-  // The shallow gold body gives the square mark a real edge and a little more mass than a badge.
-  register(createShape(OUTER_POINTS, 0.58, materials.edge, 0.1), 0.06, 1.5);
+  // The raw mark silhouette is now the outside edge. The face is inverted inside it;
+  // there is no separate outer plate competing with the logo's own border.
+  register(createShape(OUTER_POINTS, 0.58, materials.face, 0.1), 0.06, 1.5);
 
-  const face = register(createShape(scaledPoints(OUTER_POINTS, 0.94), 0.16, materials.face, 0.045), 0.22, -1.1);
+  const face = createShape(scaledPoints(OUTER_POINTS, 0.94), 0.16, materials.edge, 0.045);
   face.position.z = 0.32;
-
-  const inset = register(createShape(scaledPoints(OUTER_POINTS, 0.865), 0.035, materials.ivory, 0.018), 0.32, 0.9);
-  inset.position.z = 0.425;
+  register(face, 0.22, -1.1);
 
   const logoMaterial = new MeshBasicMaterial({
     color: 0xffffff,
@@ -142,12 +139,12 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
     side: DoubleSide,
   });
   const logoPlane = new Mesh(new PlaneGeometry(5.28, 5.28), logoMaterial);
-  logoPlane.position.set(0, 0, 0.465);
-  register(logoPlane, 0.38, -1.35);
+  logoPlane.position.set(0, 0, 0.53);
+  register(logoPlane, 0.32, -1.35);
 
   const centerPin = new Mesh(new BoxGeometry(0.08, 0.08, 0.06), materials.signal);
-  centerPin.position.set(0, 0, 0.52);
-  register(centerPin, 0.47, 1.25);
+  centerPin.position.set(0, 0, 0.59);
+  register(centerPin, 0.41, 1.25);
 
   const textureLoader = new TextureLoader();
   textureLoader.load(
