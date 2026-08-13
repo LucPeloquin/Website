@@ -70,8 +70,8 @@ function createShape(points, depth, material, bevel) {
   return new Mesh(geometry, material);
 }
 
-function scaledPoints(points, scale) {
-  return points.map(([x, y]) => [x * scale, y * scale]);
+function scaledPoints(points, scaleX, scaleY = scaleX) {
+  return points.map(([x, y]) => [x * scaleX, y * scaleY]);
 }
 
 function easeOutExpo(value) {
@@ -123,11 +123,15 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
     return mesh;
   };
 
-  // The raw mark silhouette is now the outside edge. The face is inverted inside it;
-  // there is no separate outer plate competing with the logo's own border.
-  register(createShape(OUTER_POINTS, 0.58, materials.face, 0.1), 0.06, 1.5);
+  // Match the visible mark to the supplied image's white boundary. The rear plate
+  // is deliberately smaller and recessed so its thickness never projects outside
+  // that boundary when the coin is viewed at an angle.
+  const markPoints = scaledPoints(OUTER_POINTS, 0.75, 0.79);
+  const back = createShape(scaledPoints(OUTER_POINTS, 0.68, 0.72), 0.42, materials.face, 0.07);
+  back.position.z = -0.08;
+  register(back, 0.06, 1.5);
 
-  const face = createShape(scaledPoints(OUTER_POINTS, 0.94), 0.16, materials.edge, 0.045);
+  const face = createShape(scaledPoints(markPoints, 0.94), 0.16, materials.edge, 0.045);
   face.position.z = 0.32;
   register(face, 0.22, -1.1);
 
