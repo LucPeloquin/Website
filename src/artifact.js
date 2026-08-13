@@ -21,9 +21,8 @@ import {
   WebGLRenderer,
 } from "three";
 
-const GOLD = 0xb9954b;
-const BRONZE = 0x7b5226;
 const GRAPHITE = 0x111418;
+const SHELL_WHITE = 0xf7f7f3;
 const SIGNAL = 0xa1ffcb;
 
 const OUTER_POINTS = [
@@ -96,8 +95,7 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   camera.lookAt(0, 0, 0);
 
   const materials = {
-    edge: new MeshStandardMaterial({ color: GOLD, metalness: 0.88, roughness: 0.22 }),
-    bronze: new MeshStandardMaterial({ color: BRONZE, metalness: 0.78, roughness: 0.3 }),
+    shell: new MeshStandardMaterial({ color: SHELL_WHITE, metalness: 0.08, roughness: 0.28 }),
     face: new MeshStandardMaterial({ color: GRAPHITE, metalness: 0.58, roughness: 0.3 }),
     signal: new MeshStandardMaterial({ color: SIGNAL, emissive: SIGNAL, emissiveIntensity: 1.6, roughness: 0.28 }),
   };
@@ -133,15 +131,16 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   back.position.z = -0.08;
   register(back, 0.06, 1.5);
 
-  const face = createShape(scaledPoints(markPoints, 0.94), 0.16, materials.edge, 0.045);
-  face.position.z = 0.32;
-  register(face, 0.22, -1.1);
+  // Give the white outer contour real depth. Its side wall is the visible outer
+  // shell, so the darker inner material cannot peek through the z-axis edge.
+  const shell = createShape(markPoints, 0.36, materials.shell, 0.04);
+  shell.position.z = 0.2;
+  register(shell, 0.18, 1.2);
 
-  // Fill the band between the inner gold face and the raw white outline. It stays
-  // just behind the logo texture, so the white contour remains crisp and outermost.
-  const bronzeFill = createShape(markPoints, 0.12, materials.bronze, 0.025);
-  bronzeFill.position.z = 0.41;
-  register(bronzeFill, 0.27, -0.9);
+  // The former bronze fill is now a recessed graphite face inside the white shell.
+  const blackFill = createShape(scaledPoints(markPoints, 0.94), 0.16, materials.face, 0.045);
+  blackFill.position.z = 0.34;
+  register(blackFill, 0.25, -0.9);
 
   const logoMaterial = new MeshBasicMaterial({
     color: 0xffffff,
