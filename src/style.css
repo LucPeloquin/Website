@@ -193,19 +193,15 @@ ul {
   color: var(--paper);
 }
 
-.brand-mark svg {
+.brand-mark img {
   width: 43px;
   height: 43px;
-  fill: currentColor;
+  object-fit: contain;
   transition: transform 500ms var(--ease);
 }
 
-.brand-mark circle {
-  fill: var(--signal);
-}
-
-.brand-mark:hover svg,
-.brand-mark:focus-visible svg {
+.brand-mark:hover img,
+.brand-mark:focus-visible img {
   transform: rotate(-7deg) scale(1.04);
 }
 
@@ -448,6 +444,21 @@ ul {
   height: 100%;
   touch-action: pan-y;
 }
+
+.artifact-poster {
+  position: absolute;
+  z-index: 1;
+  inset: 7%;
+  width: 86%;
+  height: 86%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.artifact-stage.artifact-failed .artifact-poster { opacity: .9; }
+.artifact-stage.artifact-failed #artifact-canvas { opacity: 0; }
 
 .artifact-status {
   position: absolute;
@@ -2107,20 +2118,6 @@ a.contact-row:hover { background: var(--signal); color: #181818; }
 .not-found > *:not(.halftone) { position: relative; z-index: 1; }
 .not-found h1 { max-width: 9ch; margin-top: 2rem; font-size: clamp(4.2rem, 12vw, 12rem); font-weight: 410; letter-spacing: -.09em; line-height: .82; }
 .not-found a { display: flex; justify-content: space-between; width: min(100%, 430px); margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--line); }
-
-.artifact-failed::before {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  width: 78%;
-  height: 18%;
-  border: 7px solid var(--gold);
-  background: linear-gradient(100deg, transparent 0 12%, var(--ink) 12.5% 48%, transparent 48.5% 72%, var(--gold) 72.5%);
-  content: "";
-  clip-path: polygon(0 38%, 55% 28%, 62% 0, 76% 9%, 78% 26%, 100% 36%, 96% 68%, 79% 76%, 72% 100%, 58% 95%, 52% 70%, 0 62%);
-  transform: translate(-50%, -50%) rotate(-7deg);
-}
 
 .js [data-reveal] {
   opacity: 0;
