@@ -138,7 +138,7 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   register(shell, 0.18, 1.2);
 
   // The former bronze fill is now a recessed graphite face inside the white shell.
-  const blackFill = createShape(scaledPoints(markPoints, 0.94), 0.16, materials.face, 0.045);
+  const blackFill = createShape(scaledPoints(markPoints, 0.985), 0.16, materials.face, 0.045);
   blackFill.position.z = 0.34;
   register(blackFill, 0.25, -0.9);
 
