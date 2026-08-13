@@ -4,11 +4,11 @@ A responsive personal portfolio for Jean-Luc Peloquin, built as a precise editor
 
 ## Highlights
 
-- Custom procedural Three.js precision object with an assembly sequence, pointer parallax, scroll response, mobile quality controls, offscreen pausing, and a reduced-motion fallback
+- Custom procedural Three.js coin object built from the supplied square logo, with beveled depth, pointer parallax, scroll response, mobile quality controls, offscreen pausing, and a reduced-motion fallback
 - Responsive light/dark editorial layout with live Las Vegas and New York clocks
 - Accessible mobile navigation and contact dialogs with native focus trapping and Escape handling
 - Selectable project case studies and an autoplaying, user-pausable principles carousel
-- Self-hosted open-source fonts and optimized WebP portraits
+- Self-hosted open-source fonts, optimized WebP portraits, and flat/3D logo variants
 - Standalone privacy and 404 pages
 - GitHub Pages deployment workflow
 
@@ -45,4 +45,4 @@ The Pages workflow builds the Vite project on pushes to `main` and deploys `dist
 
 ## Provenance
 
-See [ASSET_PROVENANCE.md](./ASSET_PROVENANCE.md). The site recreates its editorial and halftone system in code and does not redistribute Aspen Search artwork, fonts, photography, or brand assets. The 3D object is original procedural geometry informed by public visual research; it does not include a Riot Games model, texture, mark, or audio asset.
+See [ASSET_PROVENANCE.md](./ASSET_PROVENANCE.md). The site recreates its editorial and halftone system in code and does not redistribute Aspen Search artwork, fonts, photography, or brand assets. The 3D coin is original procedural geometry using the supplied logo; it does not include a Riot Games model, texture, mark, or audio asset.
