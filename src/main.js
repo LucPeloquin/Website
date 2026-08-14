@@ -147,12 +147,13 @@ document.querySelectorAll("[data-menu-link]").forEach((control) => {
 
 document.querySelectorAll("[data-contact-open]").forEach((button) => {
   button.addEventListener("click", () => {
-    const returnFocus = button;
+    const menuWasOpen = menuDialog?.open;
+    const returnFocus = menuWasOpen ? document.querySelector("[data-menu-open]") : button;
     closeDialog(menuDialog);
     window.setTimeout(() => {
       openDialog(contactDialog, returnFocus);
       setModalQuery("contact");
-    }, menuDialog?.open ? 120 : 0);
+    }, menuWasOpen ? 120 : 0);
   });
 });
 

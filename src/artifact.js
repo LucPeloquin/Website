@@ -21,8 +21,8 @@ import {
   WebGLRenderer,
 } from "three";
 
-const GOLD = 0xb9954b;
 const GRAPHITE = 0x111418;
+const SHELL_WHITE = 0xf7f7f3;
 const SIGNAL = 0xa1ffcb;
 
 const OUTER_POINTS = [
@@ -95,7 +95,7 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   camera.lookAt(0, 0, 0);
 
   const materials = {
-    edge: new MeshStandardMaterial({ color: GOLD, metalness: 0.88, roughness: 0.22 }),
+    shell: new MeshStandardMaterial({ color: SHELL_WHITE, metalness: 0.08, roughness: 0.28 }),
     face: new MeshStandardMaterial({ color: GRAPHITE, metalness: 0.58, roughness: 0.3 }),
     signal: new MeshStandardMaterial({ color: SIGNAL, emissive: SIGNAL, emissiveIntensity: 1.6, roughness: 0.28 }),
   };
@@ -131,9 +131,17 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   back.position.z = -0.08;
   register(back, 0.06, 1.5);
 
-  const face = createShape(scaledPoints(markPoints, 0.94), 0.16, materials.edge, 0.045);
-  face.position.z = 0.32;
-  register(face, 0.22, -1.1);
+  // Give the white outer contour real depth. Its side wall is the visible outer
+  // shell, so the darker inner material cannot peek through the z-axis edge.
+  const shell = createShape(markPoints, 0.36, materials.shell, 0.04);
+  shell.position.z = 0.2;
+  register(shell, 0.18, 1.2);
+
+  // Fill the transparent regions of the logo so the white face reads as one
+  // connected mark instead of exposing the graphite backing through the glyph.
+  const whiteFill = createShape(scaledPoints(markPoints, 0.985), 0.16, materials.shell, 0.045);
+  whiteFill.position.z = 0.34;
+  register(whiteFill, 0.25, -0.9);
 
   const logoMaterial = new MeshBasicMaterial({
     color: 0xffffff,

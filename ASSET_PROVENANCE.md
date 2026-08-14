@@ -6,6 +6,7 @@
 - `public/images/jean-luc-current.webp` is an optimized derivative of `images/image.png`.
 - `public/logo-flat.png` is the square logo supplied for this redesign and is used as the flat header mark.
 - `public/logo-3d.webp` is a generated visual companion based on that supplied logo, used as the static fallback for the 3D mark object.
+- `public/images/hero-scope.png` is the user-supplied PNG used as the hero surname background in place of the previous CSS halftone scope.
 - Project posters, halftone fields, reticles, UI diagrams, favicon wrapper, and social card are original code/SVG compositions created for this portfolio.
 - The 3D coin in `src/artifact.js` is built entirely from procedural Three.js primitives, custom extruded shapes, and the supplied flat logo as a local texture. No external model or texture is included.
 
