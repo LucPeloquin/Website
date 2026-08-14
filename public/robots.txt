@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://lucpeloquin.github.io/Website/sitemap.xml
+Sitemap: https://peloquin.dev/sitemap.xml

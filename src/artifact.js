@@ -137,10 +137,11 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   shell.position.z = 0.2;
   register(shell, 0.18, 1.2);
 
-  // The former bronze fill is now a recessed graphite face inside the white shell.
-  const blackFill = createShape(scaledPoints(markPoints, 0.985), 0.16, materials.face, 0.045);
-  blackFill.position.z = 0.34;
-  register(blackFill, 0.25, -0.9);
+  // Fill the transparent regions of the logo so the white face reads as one
+  // connected mark instead of exposing the graphite backing through the glyph.
+  const whiteFill = createShape(scaledPoints(markPoints, 0.985), 0.16, materials.shell, 0.045);
+  whiteFill.position.z = 0.34;
+  register(whiteFill, 0.25, -0.9);
 
   const logoMaterial = new MeshBasicMaterial({
     color: 0xffffff,

@@ -510,16 +510,14 @@ ul {
   line-height: 0.77;
 }
 
-.halftone-scope {
+.hero-scope {
   position: absolute;
   inset: 0;
-  opacity: 0.88;
-  -webkit-mask-image:
-    linear-gradient(118deg, transparent 0 30%, #000 30.4% 44%, transparent 44.4%),
-    radial-gradient(ellipse at 64% 30%, transparent 0 28%, #000 28.5% 49%, transparent 49.5%);
-  mask-image:
-    linear-gradient(118deg, transparent 0 30%, #000 30.4% 44%, transparent 44.4%),
-    radial-gradient(ellipse at 64% 30%, transparent 0 28%, #000 28.5% 49%, transparent 49.5%);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 .hero-intro {
@@ -1384,7 +1382,7 @@ ul {
 .device-hinge { display: flex; align-items: center; justify-content: center; gap: .5rem; }
 .device-hinge i { width: 21%; height: 12px; border-radius: 8px; background: #45494b; }
 .bottom-screen { grid-template-columns: repeat(3, 1fr); gap: .5rem; padding: 1rem; }
-.bottom-screen button { aspect-ratio: 1; border: 1px solid #727879; background: white; font-family: var(--mono); font-size: .52rem; }
+.bottom-screen span { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid #727879; background: white; font-family: var(--mono); font-size: .52rem; }
 
 .poster-save {
   display: grid;
@@ -2211,7 +2209,7 @@ a.contact-row:hover { background: var(--signal); color: #181818; }
   .artifact-status { display: none; }
   .hero-surname { grid-column: 1; grid-row: 2; }
   .hero-surname p { width: 100%; padding-bottom: .35em; font-size: clamp(2.7rem, 11.6vw, 3.55rem); letter-spacing: -.095em; white-space: nowrap; }
-  .hero-surname .halftone { opacity: .95; }
+  .hero-surname .hero-scope { opacity: .95; }
   .hero-intro { grid-column: 1 / 3; grid-row: 3; min-height: 340px; }
   .hero-signal { grid-column: 1 / 3; grid-row: 4; min-height: 315px; }
   .hero-intro > p,
