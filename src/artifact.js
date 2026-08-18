@@ -23,7 +23,6 @@ import {
 
 const GRAPHITE = 0x111418;
 const SHELL_WHITE = 0xf7f7f3;
-const SIGNAL = 0xa1ffcb;
 
 const OUTER_POINTS = [
   [-2.62, -2.18],
@@ -95,9 +94,8 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   camera.lookAt(0, 0, 0);
 
   const materials = {
-    shell: new MeshStandardMaterial({ color: SHELL_WHITE, metalness: 0.08, roughness: 0.28 }),
-    face: new MeshStandardMaterial({ color: GRAPHITE, metalness: 0.58, roughness: 0.3 }),
-    signal: new MeshStandardMaterial({ color: SIGNAL, emissive: SIGNAL, emissiveIntensity: 1.6, roughness: 0.28 }),
+    shell: new MeshStandardMaterial({ color: SHELL_WHITE, metalness: 0, roughness: 0.34 }),
+    face: new MeshStandardMaterial({ color: GRAPHITE, metalness: 0, roughness: 0.34 }),
   };
 
   const world = new Group();
@@ -137,11 +135,11 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   shell.position.z = 0.2;
   register(shell, 0.18, 1.2);
 
-  // Fill the transparent regions of the logo so the white face reads as one
-  // connected mark instead of exposing the graphite backing through the glyph.
-  const whiteFill = createShape(scaledPoints(markPoints, 0.985), 0.16, materials.shell, 0.045);
-  whiteFill.position.z = 0.34;
-  register(whiteFill, 0.25, -0.9);
+  // Keep a dark inset face behind the white mark so the logo remains legible
+  // while the outer shell stays a clean, neutral white.
+  const face = createShape(scaledPoints(markPoints, 0.9), 0.16, materials.face, 0.045);
+  face.position.z = 0.34;
+  register(face, 0.25, -0.9);
 
   const logoMaterial = new MeshBasicMaterial({
     color: 0xffffff,
@@ -154,7 +152,7 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
   logoPlane.position.set(0, 0, 0.53);
   register(logoPlane, 0.32, -1.35);
 
-  const centerPin = new Mesh(new BoxGeometry(0.08, 0.08, 0.06), materials.signal);
+  const centerPin = new Mesh(new BoxGeometry(0.08, 0.08, 0.06), materials.shell);
   centerPin.position.set(0, 0, 0.59);
   register(centerPin, 0.41, 1.25);
 
@@ -175,12 +173,12 @@ export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
 
   coin.rotation.set(-0.06, -0.2, 0.02);
 
-  const ambient = new HemisphereLight(0xffffff, 0x2f281d, 2.2);
+  const ambient = new HemisphereLight(0xffffff, GRAPHITE, 2.2);
   scene.add(ambient);
-  const key = new DirectionalLight(0xfff1d0, 4.1);
+  const key = new DirectionalLight(0xffffff, 4.1);
   key.position.set(3.8, 4.5, 6.8);
   scene.add(key);
-  const rim = new DirectionalLight(SIGNAL, 2.2);
+  const rim = new DirectionalLight(0xffffff, 2.2);
   rim.position.set(-4.2, 1.4, -4.8);
   scene.add(rim);
 
