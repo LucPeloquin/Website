@@ -394,11 +394,15 @@ const artifactCanvas = document.querySelector("#artifact-canvas");
 const artifactStage = document.querySelector("[data-artifact-stage]");
 if (artifactCanvas && artifactStage) {
   import("./artifact.js")
-    .then(({ initArtifact }) => initArtifact(artifactCanvas, artifactStage, { reducedMotion: prefersReducedMotion.matches }))
+    .then(async ({ initArtifact }) => {
+      await initArtifact(artifactCanvas, artifactStage, { reducedMotion: prefersReducedMotion.matches });
+    })
     .catch((error) => {
       console.error("3D artifact failed to initialize", error);
+      artifactStage.dataset.artifactState = "failed";
+      artifactStage.classList.remove("artifact-loading", "artifact-ready");
       artifactStage.classList.add("artifact-failed");
       const status = document.querySelector("[data-artifact-status]");
-      if (status) status.textContent = "STATIC MODE";
+      if (status) status.textContent = "STATIC SVG";
     });
 }

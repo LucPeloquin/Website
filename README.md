@@ -4,11 +4,11 @@ A responsive personal portfolio for Jean-Luc Peloquin, built as a precise editor
 
 ## Highlights
 
-- Custom procedural Three.js coin object built from the supplied square logo, with beveled depth, pointer parallax, scroll response, mobile quality controls, offscreen pausing, and a reduced-motion fallback
+- Machined-metal Three.js plaque generated from the exact supplied alpha mask, with real recessed engraving, restrained tilt, scroll response, mobile quality controls, offscreen pausing, and an exact SVG fallback
 - Responsive light/dark editorial layout with live Las Vegas and New York clocks
 - Accessible mobile navigation and contact dialogs with native focus trapping and Escape handling
 - Selectable project case studies and an autoplaying, user-pausable principles carousel
-- Self-hosted open-source fonts, optimized WebP portraits, and flat/3D logo variants
+- Self-hosted open-source fonts, optimized WebP portraits, and deterministic SVG/GLB logo assets
 - Standalone privacy and 404 pages
 - GitHub Pages deployment workflow
 
@@ -26,6 +26,13 @@ npm run build
 npm run preview
 ```
 
+Regenerate or validate the committed logo model and fallback:
+
+```bash
+npm run generate:logo-model
+npm run check:logo-model
+```
+
 ## Structure
 
 ```text
@@ -33,7 +40,8 @@ index.html              Main portfolio
 privacy.html            Privacy details
 404.html                Static 404 page
 src/main.js             Page interactions and UI state
-src/artifact.js         Procedural Three.js model and animation
+src/artifact.js         GLB loading, lighting, and plaque interaction
+scripts/logo-model.mjs  Deterministic alpha-to-SVG/GLB generator and validator
 src/style.css           Design system and responsive layouts
 public/                 Optimized images, social card, and favicon
 .github/workflows/      GitHub Pages deployment
@@ -45,4 +53,4 @@ The Pages workflow builds the Vite project on pushes to `main` and deploys `dist
 
 ## Provenance
 
-See [ASSET_PROVENANCE.md](./ASSET_PROVENANCE.md). The site recreates its editorial and halftone system in code and does not redistribute Aspen Search artwork, fonts, photography, or brand assets. The 3D coin is original procedural geometry using the supplied logo; it does not include a Riot Games model, texture, mark, or audio asset.
+See [ASSET_PROVENANCE.md](./ASSET_PROVENANCE.md). The site recreates its editorial and halftone system in code and does not redistribute Aspen Search artwork, fonts, photography, or brand assets. The 3D plaque is generated from the supplied mark; it does not include a third-party model, texture, audio, or game file.

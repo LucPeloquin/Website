@@ -1,272 +1,285 @@
 import {
   ACESFilmicToneMapping,
-  BoxGeometry,
-  Clock,
+  Box3,
   DirectionalLight,
-  DoubleSide,
-  ExtrudeGeometry,
   Group,
-  HemisphereLight,
   MathUtils,
-  Mesh,
-  MeshBasicMaterial,
-  MeshStandardMaterial,
   PerspectiveCamera,
-  PlaneGeometry,
+  PMREMGenerator,
   Scene,
-  Shape,
   SRGBColorSpace,
-  TextureLoader,
   Vector2,
+  Vector3,
   WebGLRenderer,
 } from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-const GRAPHITE = 0x111418;
-const SHELL_WHITE = 0xf7f7f3;
+const MODEL_URL = new URL("models/tour-de-force-plaque.glb", document.baseURI).href;
+const GRAPHITE = 0x111416;
+const SETTLE_DURATION = 700;
+const MODEL_PARTS = ["PlaqueBase", "SurfaceLand", "EngravingFloor"];
 
-const OUTER_POINTS = [
-  [-2.62, -2.18],
-  [-2.22, -2.62],
-  [-0.72, -2.62],
-  [-0.52, -2.48],
-  [0.52, -2.48],
-  [0.72, -2.62],
-  [2.22, -2.62],
-  [2.62, -2.18],
-  [2.62, -0.72],
-  [2.48, -0.52],
-  [2.48, 0.52],
-  [2.62, 0.72],
-  [2.62, 2.18],
-  [2.22, 2.62],
-  [0.72, 2.62],
-  [0.52, 2.48],
-  [-0.52, 2.48],
-  [-0.72, 2.62],
-  [-2.22, 2.62],
-  [-2.62, 2.18],
-  [-2.62, 0.72],
-  [-2.48, 0.52],
-  [-2.48, -0.52],
-  [-2.62, -0.72],
-];
-
-function createShape(points, depth, material, bevel) {
-  const shape = new Shape();
-  shape.moveTo(points[0][0], points[0][1]);
-  points.slice(1).forEach(([x, y]) => shape.lineTo(x, y));
-  shape.closePath();
-  const geometry = new ExtrudeGeometry(shape, {
-    depth,
-    bevelEnabled: true,
-    bevelSegments: 3,
-    bevelSize: bevel,
-    bevelThickness: bevel,
-    curveSegments: 2,
-  });
-  geometry.translate(0, 0, -depth / 2);
-  geometry.computeVertexNormals();
-  return new Mesh(geometry, material);
+function easeOutCubic(value) {
+  return 1 - (1 - value) ** 3;
 }
 
-function scaledPoints(points, scaleX, scaleY = scaleX) {
-  return points.map(([x, y]) => [x * scaleX, y * scaleY]);
+function fitCamera(camera, stage, objectSize) {
+  const rect = stage.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  const aspect = width / height;
+  const verticalFov = MathUtils.degToRad(camera.fov);
+  const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
+  const padding = width < 480 ? 1.14 : 1.1;
+  const verticalDistance = (objectSize.y * padding) / (2 * Math.tan(verticalFov / 2));
+  const horizontalDistance = (objectSize.x * padding) / (2 * Math.tan(horizontalFov / 2));
+  camera.aspect = aspect;
+  camera.position.set(0, 0, Math.max(verticalDistance, horizontalDistance) + objectSize.z * 0.5);
+  camera.updateProjectionMatrix();
+  return { height, width };
 }
 
-function easeOutExpo(value) {
-  return value === 1 ? 1 : 1 - 2 ** (-10 * value);
+function setStatus(stage, value) {
+  const status = stage.querySelector("[data-artifact-status]");
+  if (status) status.textContent = value;
 }
 
-export function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
-  const renderer = new WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: true,
-    powerPreference: "high-performance",
-  });
-  renderer.outputColorSpace = SRGBColorSpace;
-  renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.04;
+function showFallback(stage) {
+  stage.dataset.artifactState = "failed";
+  stage.dataset.artifactRenderState = "fallback";
+  stage.classList.remove("artifact-loading", "artifact-ready");
+  stage.classList.add("artifact-failed");
+  setStatus(stage, "STATIC SVG");
+}
 
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(31, 1, 0.1, 100);
-  camera.position.set(0.18, 0.1, 10.7);
-  camera.lookAt(0, 0, 0);
+export async function initArtifact(canvas, stage, { reducedMotion = false } = {}) {
+  stage.dataset.artifactState = "loading";
+  stage.dataset.artifactRenderState = "loading";
+  stage.classList.remove("artifact-failed", "artifact-ready");
+  stage.classList.add("artifact-loading");
+  setStatus(stage, "MACHINING");
 
-  const materials = {
-    shell: new MeshStandardMaterial({ color: SHELL_WHITE, metalness: 0, roughness: 0.34 }),
-    face: new MeshStandardMaterial({ color: GRAPHITE, metalness: 0, roughness: 0.34 }),
-  };
+  let renderer;
+  let environmentTexture;
+  let pmremGenerator;
+  let roomEnvironment;
 
-  const world = new Group();
-  const coin = new Group();
-  world.add(coin);
-  scene.add(world);
+  try {
+    renderer = new WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      canvas,
+      powerPreference: "high-performance",
+    });
+    renderer.outputColorSpace = SRGBColorSpace;
+    renderer.toneMapping = ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.02;
 
-  const parts = [];
-  const register = (mesh, delay, startZ) => {
-    mesh.userData.delay = delay;
-    mesh.userData.startZ = startZ;
-    mesh.userData.homePosition = mesh.position.clone();
-    mesh.userData.homeQuaternion = mesh.quaternion.clone();
-    mesh.position.z += startZ;
-    mesh.rotation.x += startZ > 0 ? 0.14 : -0.14;
-    mesh.scale.setScalar(reducedMotion ? 1 : 0.88);
-    if (reducedMotion) {
-      mesh.position.copy(mesh.userData.homePosition);
-      mesh.quaternion.copy(mesh.userData.homeQuaternion);
+    pmremGenerator = new PMREMGenerator(renderer);
+    roomEnvironment = new RoomEnvironment();
+    environmentTexture = pmremGenerator.fromScene(roomEnvironment, 0.035).texture;
+
+    const scene = new Scene();
+    scene.environment = environmentTexture;
+
+    const camera = new PerspectiveCamera(30, 1, 0.1, 100);
+    const world = new Group();
+    scene.add(world);
+
+    const gltf = await new GLTFLoader().loadAsync(MODEL_URL);
+    const plaque = gltf.scene;
+    const foundParts = new Set();
+
+    plaque.traverse((object) => {
+      if (!object.isMesh) return;
+      if (MODEL_PARTS.includes(object.name)) foundParts.add(object.name);
+      object.castShadow = false;
+      object.receiveShadow = false;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => {
+        if (material.name === "BrushedSilver") {
+          material.color.setHex(0xbfc3c6);
+          material.metalness = 0.9;
+          material.roughness = 0.32;
+          material.envMapIntensity = 1.15;
+        } else if (material.name === "GraphiteRecess") {
+          material.color.setHex(GRAPHITE);
+          material.metalness = 0.35;
+          material.roughness = 0.5;
+          material.envMapIntensity = 0.72;
+        }
+        material.needsUpdate = true;
+      });
+    });
+
+    for (const part of MODEL_PARTS) {
+      if (!foundParts.has(part)) throw new Error(`The plaque model is missing ${part}.`);
     }
-    coin.add(mesh);
-    parts.push(mesh);
-    return mesh;
-  };
 
-  // Match the visible mark to the supplied image's white boundary. The rear plate
-  // is deliberately smaller and recessed so its thickness never projects outside
-  // that boundary when the coin is viewed at an angle.
-  const markPoints = scaledPoints(OUTER_POINTS, 0.75, 0.79);
-  const back = createShape(scaledPoints(OUTER_POINTS, 0.68, 0.72), 0.42, materials.face, 0.07);
-  back.position.z = -0.08;
-  register(back, 0.06, 1.5);
+    const modelBounds = new Box3().setFromObject(plaque);
+    const modelCenter = modelBounds.getCenter(new Vector3());
+    const modelSize = modelBounds.getSize(new Vector3());
+    plaque.position.sub(modelCenter);
+    world.add(plaque);
 
-  // Give the white outer contour real depth. Its side wall is the visible outer
-  // shell, so the darker inner material cannot peek through the z-axis edge.
-  const shell = createShape(markPoints, 0.36, materials.shell, 0.04);
-  shell.position.z = 0.2;
-  register(shell, 0.18, 1.2);
+    const key = new DirectionalLight(0xffffff, 3.4);
+    key.position.set(3.8, 4.7, 6.5);
+    scene.add(key);
+    const rim = new DirectionalLight(0xdde7ef, 2.2);
+    rim.position.set(-4.6, 1.8, 3.2);
+    scene.add(rim);
+    const edge = new DirectionalLight(0xffffff, 0.9);
+    edge.position.set(0, -3.8, 2.2);
+    scene.add(edge);
 
-  // Keep a dark inset face behind the white mark so the logo remains legible
-  // while the outer shell stays a clean, neutral white.
-  const face = createShape(scaledPoints(markPoints, 0.9), 0.16, materials.face, 0.045);
-  face.position.z = 0.34;
-  register(face, 0.25, -0.9);
+    const baseRotation = { x: -0.055, y: -0.105, z: 0.012 };
+    const pointer = new Vector2();
+    const pointerTarget = new Vector2();
+    const settleStart = performance.now();
+    let frameId = 0;
+    let stageVisible = true;
+    let contextAvailable = true;
+    let lastScrollY = window.scrollY;
+    let scrollImpulse = 0;
 
-  const logoMaterial = new MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    alphaTest: 0.03,
-    depthWrite: false,
-    side: DoubleSide,
-  });
-  const logoPlane = new Mesh(new PlaneGeometry(5.28, 5.28), logoMaterial);
-  logoPlane.position.set(0, 0, 0.53);
-  register(logoPlane, 0.32, -1.35);
+    function syncRenderState() {
+      if (!contextAvailable) stage.dataset.artifactRenderState = "fallback";
+      else if (reducedMotion) stage.dataset.artifactRenderState = "static";
+      else stage.dataset.artifactRenderState = stageVisible && !document.hidden ? "active" : "paused";
+    }
 
-  const centerPin = new Mesh(new BoxGeometry(0.08, 0.08, 0.06), materials.shell);
-  centerPin.position.set(0, 0, 0.59);
-  register(centerPin, 0.41, 1.25);
+    function resize() {
+      const { height, width } = fitCamera(camera, stage, modelSize);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setSize(width, height, false);
+      if (reducedMotion || !frameId) renderer.render(scene, camera);
+    }
 
-  const textureLoader = new TextureLoader();
-  textureLoader.load(
-    new URL("logo-flat.png", document.baseURI).href,
-    (texture) => {
-      texture.colorSpace = SRGBColorSpace;
-      logoMaterial.map = texture;
-      logoMaterial.needsUpdate = true;
-    },
-    undefined,
-    () => {
-      const status = document.querySelector("[data-artifact-status]");
-      if (status) status.textContent = "COIN / NO TEXTURE";
-    },
-  );
+    function canAnimate() {
+      return !reducedMotion && stageVisible && !document.hidden && contextAvailable;
+    }
 
-  coin.rotation.set(-0.06, -0.2, 0.02);
+    function requestFrame() {
+      if (canAnimate() && !frameId) frameId = requestAnimationFrame(render);
+    }
 
-  const ambient = new HemisphereLight(0xffffff, GRAPHITE, 2.2);
-  scene.add(ambient);
-  const key = new DirectionalLight(0xffffff, 4.1);
-  key.position.set(3.8, 4.5, 6.8);
-  scene.add(key);
-  const rim = new DirectionalLight(0xffffff, 2.2);
-  rim.position.set(-4.2, 1.4, -4.8);
-  scene.add(rim);
+    function render(now) {
+      frameId = 0;
+      if (!canAnimate()) return;
 
-  const assemblyStart = performance.now();
-  const pointer = new Vector2();
-  const pointerTarget = new Vector2();
-  const clock = new Clock();
-  let frameId = 0;
-  let visible = true;
-  let lastScrollY = window.scrollY;
-  let scrollVelocity = 0;
-  const status = document.querySelector("[data-artifact-status]");
+      const settleProgress = MathUtils.clamp((now - settleStart) / SETTLE_DURATION, 0, 1);
+      const settled = easeOutCubic(settleProgress);
+      const elapsed = (now - settleStart) / 1000;
+      pointer.lerp(pointerTarget, 0.075);
+      scrollImpulse *= 0.9;
 
-  function resize() {
-    const rect = stage.getBoundingClientRect();
-    const width = Math.max(1, Math.round(rect.width));
-    const height = Math.max(1, Math.round(rect.height));
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.fov = width < 480 ? 35 : 31;
-    camera.position.z = width < 480 ? 12.8 : 10.7;
-    camera.updateProjectionMatrix();
-    if (reducedMotion) renderer.render(scene, camera);
-  }
+      world.scale.setScalar(MathUtils.lerp(0.94, 1, settled));
+      world.position.y = MathUtils.lerp(-0.08, 0, settled) + Math.sin(elapsed * 1.05) * 0.026;
+      world.position.z = MathUtils.lerp(-0.48, 0, settled);
+      world.rotation.x = baseRotation.x + pointer.y * 0.055 + MathUtils.lerp(0.055, 0, settled);
+      world.rotation.y = baseRotation.y + pointer.x * 0.11 + scrollImpulse;
+      world.rotation.z = baseRotation.z - scrollImpulse * 0.14;
 
-  const resizeObserver = new ResizeObserver(resize);
-  resizeObserver.observe(stage);
-  resize();
+      if (settleProgress === 1) setStatus(stage, "INTERACTIVE");
+      renderer.render(scene, camera);
+      requestFrame();
+    }
 
-  stage.addEventListener("pointermove", (event) => {
-    const rect = stage.getBoundingClientRect();
-    pointerTarget.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    pointerTarget.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
-  });
-  stage.addEventListener("pointerleave", () => pointerTarget.set(0, 0));
+    function handlePointerMove(event) {
+      const rect = stage.getBoundingClientRect();
+      pointerTarget.x = MathUtils.clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1);
+      pointerTarget.y = MathUtils.clamp(-(((event.clientY - rect.top) / rect.height) * 2 - 1), -1, 1);
+    }
 
-  window.addEventListener(
-    "scroll",
-    () => {
+    function handlePointerLeave() {
+      pointerTarget.set(0, 0);
+    }
+
+    function handleScroll() {
       const delta = window.scrollY - lastScrollY;
       lastScrollY = window.scrollY;
-      scrollVelocity = MathUtils.clamp(delta * 0.004, -0.16, 0.16);
-    },
-    { passive: true },
-  );
-
-  const visibilityObserver = new IntersectionObserver(
-    ([entry]) => {
-      visible = entry.isIntersecting;
-      if (visible && !frameId && !reducedMotion) frameId = requestAnimationFrame(render);
-    },
-    { rootMargin: "100px" },
-  );
-  visibilityObserver.observe(stage);
-
-  function render(now) {
-    frameId = 0;
-    if (!visible) return;
-
-    const elapsed = clock.getElapsedTime();
-    const assemblyElapsed = (now - assemblyStart) / 1000;
-    pointer.lerp(pointerTarget, 0.06);
-    scrollVelocity *= 0.92;
-
-    if (!reducedMotion) {
-      parts.forEach((part) => {
-        const local = MathUtils.clamp((assemblyElapsed - part.userData.delay) / 0.72, 0, 1);
-        const eased = easeOutExpo(local);
-        part.position.lerp(part.userData.homePosition, eased);
-        part.quaternion.slerp(part.userData.homeQuaternion, eased);
-        part.scale.setScalar(MathUtils.lerp(part.scale.x, 1, eased));
-      });
-
-      world.position.y = Math.sin(elapsed * 1.1) * 0.035;
-      world.rotation.y = pointer.x * 0.17 + scrollVelocity;
-      world.rotation.x = pointer.y * 0.08;
-      world.rotation.z = scrollVelocity * -0.18;
-
-      if (assemblyElapsed > 1.5 && status) status.textContent = "INTERACTIVE";
-    } else if (status) {
-      status.textContent = "STATIC MODE";
+      scrollImpulse = MathUtils.clamp(scrollImpulse + delta * 0.0016, -0.09, 0.09);
     }
 
-    renderer.render(scene, camera);
-    if (!reducedMotion) frameId = requestAnimationFrame(render);
-  }
+    function handleVisibilityChange() {
+      syncRenderState();
+      requestFrame();
+    }
 
-  renderer.render(scene, camera);
-  if (!reducedMotion) frameId = requestAnimationFrame(render);
+    function handleContextLost(event) {
+      event.preventDefault();
+      contextAvailable = false;
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = 0;
+      showFallback(stage);
+    }
+
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(stage);
+
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        stageVisible = entry.isIntersecting;
+        syncRenderState();
+        requestFrame();
+      },
+      { rootMargin: "100px" },
+    );
+    visibilityObserver.observe(stage);
+
+    canvas.addEventListener("webglcontextlost", handleContextLost, false);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    if (!reducedMotion) {
+      stage.addEventListener("pointermove", handlePointerMove);
+      stage.addEventListener("pointerleave", handlePointerLeave);
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    if (reducedMotion) {
+      world.rotation.set(baseRotation.x, baseRotation.y, baseRotation.z);
+      world.scale.setScalar(1);
+      setStatus(stage, "STATIC FRAME");
+    } else {
+      world.position.set(0, -0.08, -0.48);
+      world.rotation.set(baseRotation.x + 0.055, baseRotation.y, baseRotation.z);
+      world.scale.setScalar(0.94);
+    }
+
+    resize();
+    renderer.render(scene, camera);
+    stage.dataset.artifactState = "ready";
+    syncRenderState();
+    stage.classList.remove("artifact-loading");
+    requestAnimationFrame(() => stage.classList.add("artifact-ready"));
+    requestFrame();
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
+      visibilityObserver.disconnect();
+      canvas.removeEventListener("webglcontextlost", handleContextLost);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stage.removeEventListener("pointermove", handlePointerMove);
+      stage.removeEventListener("pointerleave", handlePointerLeave);
+      window.removeEventListener("scroll", handleScroll);
+      plaque.traverse((object) => {
+        if (!object.isMesh) return;
+        object.geometry.dispose();
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach((material) => material.dispose());
+      });
+      environmentTexture.dispose();
+      pmremGenerator.dispose();
+      roomEnvironment.dispose();
+      renderer.dispose();
+    };
+  } catch (error) {
+    environmentTexture?.dispose();
+    pmremGenerator?.dispose();
+    roomEnvironment?.dispose();
+    renderer?.dispose();
+    showFallback(stage);
+    throw error;
+  }
 }

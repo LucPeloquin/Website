@@ -28,6 +28,8 @@
   --gold: #80621f;
   --violet: #7956ff;
   --shadow: rgba(0, 0, 0, 0.16);
+  --artifact-stage: #d7d8d4;
+  --artifact-ink-rgb: 24, 27, 28;
   --header-height: 60px;
   --gutter: clamp(1rem, 1.65vw, 2rem);
   --sans: "Manrope Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -421,7 +423,8 @@ ul {
   grid-column: 3 / 5;
   grid-row: 1;
   margin: 0;
-  background: var(--panel);
+  background: var(--artifact-stage);
+  color: rgb(var(--artifact-ink-rgb));
   cursor: crosshair;
   isolation: isolate;
 }
@@ -430,8 +433,8 @@ ul {
   position: absolute;
   z-index: 1;
   inset: 0;
-  border: 1px solid rgba(var(--paper-rgb), 0.08);
-  background: linear-gradient(135deg, transparent 55%, rgba(185, 149, 75, 0.09));
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 48%, rgba(24, 27, 28, 0.045));
   content: "";
   pointer-events: none;
 }
@@ -442,21 +445,25 @@ ul {
   inset: 0;
   width: 100%;
   height: 100%;
+  opacity: 0;
   touch-action: pan-y;
+  transition: opacity 420ms ease;
 }
 
 .artifact-poster {
   position: absolute;
   z-index: 1;
-  inset: 7%;
-  width: 86%;
-  height: 86%;
-  object-fit: cover;
-  opacity: 0;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  opacity: 0.72;
   pointer-events: none;
-  transition: opacity 300ms ease;
+  transition: opacity 420ms ease;
 }
 
+.artifact-stage.artifact-ready .artifact-poster { opacity: 0; }
+.artifact-stage.artifact-ready #artifact-canvas { opacity: 1; }
 .artifact-stage.artifact-failed .artifact-poster { opacity: .9; }
 .artifact-stage.artifact-failed #artifact-canvas { opacity: 0; }
 
@@ -469,7 +476,7 @@ ul {
   display: flex;
   justify-content: space-between;
   padding: 0.7rem var(--gutter);
-  color: rgba(var(--ink-rgb), 0.66);
+  color: rgba(var(--artifact-ink-rgb), 0.66);
   pointer-events: none;
 }
 
@@ -486,6 +493,10 @@ ul {
   position: absolute;
   z-index: 0;
   inset: 0;
+  background-color: var(--artifact-stage);
+  background-image:
+    radial-gradient(circle at center, rgba(var(--artifact-ink-rgb), 0.62) 0 0.8px, transparent 1px),
+    radial-gradient(circle at center, rgba(var(--artifact-ink-rgb), 0.42) 0 0.62px, transparent 0.86px);
   opacity: 0.38;
   -webkit-mask-image: radial-gradient(ellipse at 52% 52%, #000 0 14%, transparent 66%);
   mask-image: radial-gradient(ellipse at 52% 52%, #000 0 14%, transparent 66%);
