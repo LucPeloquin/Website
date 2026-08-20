@@ -6,7 +6,7 @@
 - `public/images/jean-luc-current.webp` is an optimized derivative of `images/image.png`.
 - `public/logo-flat.png` is the square logo supplied for this redesign and is used as the flat header mark.
 - `assets/source/tour-de-force-inverted.png` is the authoritative 512×512 inverted mark supplied for the engraved plaque. Its alpha channel is the sole source of the generated logo geometry.
-- `public/logo-inverted.svg` and `public/models/tour-de-force-plaque.glb` are deterministic derivatives generated from that alpha mask by `scripts/logo-model.mjs`. The SVG is the loading and failure fallback; the GLB contains the machined plaque geometry.
+- `public/logo-inverted.svg`, `public/models/tour-de-force-plaque.glb`, and `src/generated/logo-ascii.js` are deterministic derivatives generated from that alpha mask by `scripts/logo-model.mjs`. The SVG is the loading and failure fallback, the GLB contains the machined plaque geometry, and the ASCII rendition is used by the startup screen.
 - `public/images/hero-scope.png` is the user-supplied PNG used as the hero surname background in place of the previous CSS halftone scope.
 - Project posters, halftone fields, reticles, UI diagrams, favicon wrapper, and social card are original code/SVG compositions created for this portfolio.
 - The engraved plaque uses locally generated contour geometry and procedural Three.js lighting. No third-party 3D model or texture is included or distributed.

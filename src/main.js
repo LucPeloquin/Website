@@ -1,7 +1,54 @@
 import "./style.css";
+import { LOGO_ASCII } from "./generated/logo-ascii.js";
 
 const root = document.documentElement;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const bootScreen = document.querySelector("[data-boot-screen]");
+const bootLogo = bootScreen?.querySelector("[data-boot-logo]");
+const bootCounter = bootScreen?.querySelector("[data-boot-counter]");
+const bootProgress = bootScreen?.querySelector("[data-boot-progress]");
+const bootStatus = bootScreen?.querySelector("[data-boot-status]");
+const bootStartedAt = performance.now();
+let bootFrameId = 0;
+let bootCompletionRequested = false;
+
+if (bootLogo) bootLogo.textContent = LOGO_ASCII;
+
+function setBootProgress(value) {
+  const progress = Math.min(100, Math.max(0, value));
+  if (bootCounter) bootCounter.textContent = String(Math.round(progress)).padStart(3, "0");
+  if (bootProgress) bootProgress.style.transform = `scaleX(${progress / 100})`;
+}
+
+function animateBootProgress(now) {
+  if (!bootScreen?.isConnected) return;
+  const duration = prefersReducedMotion.matches ? 280 : 1500;
+  setBootProgress(Math.min(94, ((now - bootStartedAt) / duration) * 100));
+  bootFrameId = requestAnimationFrame(animateBootProgress);
+}
+
+function completeBoot() {
+  if (bootCompletionRequested || !bootScreen) return;
+  bootCompletionRequested = true;
+  const minimumDuration = prefersReducedMotion.matches ? 240 : 1500;
+  const remaining = Math.max(0, minimumDuration - (performance.now() - bootStartedAt));
+
+  window.setTimeout(() => {
+    if (bootFrameId) cancelAnimationFrame(bootFrameId);
+    setBootProgress(100);
+    if (bootStatus) bootStatus.textContent = "SYSTEM READY";
+    bootScreen.classList.add("is-ready");
+
+    window.setTimeout(() => {
+      window.clearTimeout(window.__jlBootWatchdog);
+      bootScreen.classList.add("is-exiting");
+      root.classList.remove("booting");
+      window.setTimeout(() => bootScreen.remove(), prefersReducedMotion.matches ? 20 : 540);
+    }, prefersReducedMotion.matches ? 20 : 150);
+  }, remaining);
+}
+
+if (bootScreen) bootFrameId = requestAnimationFrame(animateBootProgress);
 
 const projects = [
   {
@@ -392,8 +439,9 @@ if (principlesSection && "IntersectionObserver" in window) {
 
 const artifactCanvas = document.querySelector("#artifact-canvas");
 const artifactStage = document.querySelector("[data-artifact-stage]");
+let artifactReady = Promise.resolve();
 if (artifactCanvas && artifactStage) {
-  import("./artifact.js")
+  artifactReady = import("./artifact.js")
     .then(async ({ initArtifact }) => {
       await initArtifact(artifactCanvas, artifactStage, { reducedMotion: prefersReducedMotion.matches });
     })
@@ -406,3 +454,10 @@ if (artifactCanvas && artifactStage) {
       if (status) status.textContent = "STATIC SVG";
     });
 }
+
+const pageLoaded =
+  document.readyState === "complete"
+    ? Promise.resolve()
+    : new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
+
+Promise.allSettled([pageLoaded, artifactReady]).then(completeBoot);

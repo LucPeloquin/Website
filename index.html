@@ -24,7 +24,7 @@
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <title>Jean-Luc Peloquin — Software Engineer</title>
     <script>
-      document.documentElement.classList.add("js");
+      document.documentElement.classList.add("js", "booting");
       try {
         const savedTheme = localStorage.getItem("jl-theme");
         const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -56,6 +56,29 @@
     </script>
   </head>
   <body>
+    <div class="boot-screen" data-boot-screen role="status" aria-label="Loading Jean-Luc Peloquin's portfolio">
+      <div class="boot-screen-frame" aria-hidden="true">
+        <div class="boot-screen-topline utility-text">
+          <span>JL / PORTFOLIO SYSTEM</span>
+          <span><i>BOOT</i> <b data-boot-counter>000</b></span>
+        </div>
+        <div class="boot-screen-mark">
+          <pre class="boot-screen-logo" data-boot-logo></pre>
+        </div>
+        <div class="boot-screen-progress"><span data-boot-progress></span></div>
+        <div class="boot-screen-footer utility-text">
+          <span data-boot-status>INITIALIZING ALPHA MARK</span>
+          <span>LAS VEGAS / NV</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      window.__jlBootWatchdog = window.setTimeout(function () {
+        document.documentElement.classList.remove("booting");
+        document.querySelector("[data-boot-screen]")?.remove();
+      }, 5000);
+    </script>
+
     <a class="skip-link" href="#main">Skip to content</a>
 
     <header class="site-header" data-header>
