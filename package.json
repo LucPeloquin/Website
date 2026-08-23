@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "generate:logo-model": "node scripts/logo-model.mjs --write",
     "check:logo-model": "node scripts/logo-model.mjs --check",
-    "check": "npm run check:logo-model && npm run build"
+    "check:work-visuals": "node scripts/check-work-visuals.mjs",
+    "check:capability-visuals": "node scripts/check-capability-visuals.mjs",
+    "check": "npm run check:logo-model && npm run check:work-visuals && npm run check:capability-visuals && npm run build"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",

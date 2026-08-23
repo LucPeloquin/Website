@@ -140,13 +140,15 @@ export async function initArtifact(canvas, stage, { reducedMotion = false } = {}
     let frameId = 0;
     let stageVisible = true;
     let contextAvailable = true;
+    let workRendererActive = false;
+    let capabilityRendererActive = false;
     let lastScrollY = window.scrollY;
     let scrollImpulse = 0;
 
     function syncRenderState() {
       if (!contextAvailable) stage.dataset.artifactRenderState = "fallback";
       else if (reducedMotion) stage.dataset.artifactRenderState = "static";
-      else stage.dataset.artifactRenderState = stageVisible && !document.hidden ? "active" : "paused";
+      else stage.dataset.artifactRenderState = stageVisible && !document.hidden && !workRendererActive && !capabilityRendererActive ? "active" : "paused";
     }
 
     function resize() {
@@ -157,7 +159,7 @@ export async function initArtifact(canvas, stage, { reducedMotion = false } = {}
     }
 
     function canAnimate() {
-      return !reducedMotion && stageVisible && !document.hidden && contextAvailable;
+      return !reducedMotion && stageVisible && !document.hidden && contextAvailable && !workRendererActive && !capabilityRendererActive;
     }
 
     function requestFrame() {
@@ -207,6 +209,18 @@ export async function initArtifact(canvas, stage, { reducedMotion = false } = {}
       requestFrame();
     }
 
+    function handleWorkRendererActivity(event) {
+      workRendererActive = Boolean(event.detail?.active);
+      syncRenderState();
+      requestFrame();
+    }
+
+    function handleCapabilityRendererActivity(event) {
+      capabilityRendererActive = Boolean(event.detail?.active);
+      syncRenderState();
+      requestFrame();
+    }
+
     function handleContextLost(event) {
       event.preventDefault();
       contextAvailable = false;
@@ -230,6 +244,8 @@ export async function initArtifact(canvas, stage, { reducedMotion = false } = {}
 
     canvas.addEventListener("webglcontextlost", handleContextLost, false);
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("jl:work-visual-activity", handleWorkRendererActivity);
+    window.addEventListener("jl:capability-visual-activity", handleCapabilityRendererActivity);
     if (!reducedMotion) {
       stage.addEventListener("pointermove", handlePointerMove);
       stage.addEventListener("pointerleave", handlePointerLeave);
@@ -260,6 +276,8 @@ export async function initArtifact(canvas, stage, { reducedMotion = false } = {}
       visibilityObserver.disconnect();
       canvas.removeEventListener("webglcontextlost", handleContextLost);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("jl:work-visual-activity", handleWorkRendererActivity);
+      window.removeEventListener("jl:capability-visual-activity", handleCapabilityRendererActivity);
       stage.removeEventListener("pointermove", handlePointerMove);
       stage.removeEventListener("pointerleave", handlePointerLeave);
       window.removeEventListener("scroll", handleScroll);

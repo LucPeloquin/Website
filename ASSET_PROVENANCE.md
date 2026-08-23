@@ -7,9 +7,14 @@
 - `public/logo-flat.png` is the square logo supplied for this redesign and is used as the flat header mark.
 - `assets/source/tour-de-force-inverted.png` is the authoritative 512×512 inverted mark supplied for the engraved plaque. Its alpha channel is the sole source of the generated logo geometry.
 - `public/logo-inverted.svg`, `public/models/tour-de-force-plaque.glb`, and `src/generated/logo-ascii.js` are deterministic derivatives generated from that alpha mask by `scripts/logo-model.mjs`. The SVG is the loading and failure fallback, the GLB contains the machined plaque geometry, and the ASCII rendition is used by the startup screen.
-- `public/images/hero-scope.png` is the user-supplied PNG used as the hero surname background in place of the previous CSS halftone scope.
-- Project posters, halftone fields, reticles, UI diagrams, favicon wrapper, and social card are original code/SVG compositions created for this portfolio.
+- `public/images/hero-scope.png` is the user-supplied eye-mark source. `public/images/hero-scope-3d.webp` is its transparent, web-optimized silver/graphite relief derivative, generated with OpenAI image generation from that source and used behind the full name in the hero. The source silhouette and negative space were treated as the shape authority.
+- The four capability-panel CSS compositions are original code and remain only as loading, WebGL, and context-loss fallbacks. `src/capability-visuals.js` replaces them with four original procedural Three.js scenes rendered through one shared context; it loads no model, texture, thumbnail, or other remote asset.
+- The five CSS project posters are original code compositions retained only as loading, WebGL, and context-loss fallbacks for the Selected Work renderer.
+- `src/work-visual.js` and `src/work-visual-states.js` generate all Selected Work geometry at runtime. Their topology, platform/core, and line-field techniques substantially adapt ThreeUI Community's `nexus-topology.html`, `platform-core.html`, and `vertex-9.html` at pinned commit `fbc9b3d61b0ef4b2e93b42e4fffa617ca277429b`, under the MIT License. The complete notice and immutable source links are in `THIRD_PARTY_NOTICES.md`.
+- Halftone fields, reticles, UI diagrams, favicon wrapper, and social card are original code/SVG compositions created for this portfolio.
 - The engraved plaque uses locally generated contour geometry and procedural Three.js lighting. No third-party 3D model or texture is included or distributed.
+- The Selected Work renderer distributes no ThreeUI package, React code, thumbnails, preview videos, Pro code, model, texture, or remote asset.
+- The recent-activity panel reads public push events from GitHub's public REST API at runtime. It distributes no GitHub image or user data snapshot and falls back to a profile link when live activity is unavailable.
 
 ## Open-source fonts
 

@@ -278,40 +278,133 @@ if (prefersReducedMotion.matches || !("IntersectionObserver" in window)) {
   revealNodes.forEach((node) => revealObserver.observe(node));
 }
 
-function animateCount(element) {
-  if (element.dataset.counted === "true") return;
-  element.dataset.counted = "true";
-  const end = Number(element.dataset.count);
-  if (prefersReducedMotion.matches) {
-    element.textContent = end;
-    return;
-  }
-  const startTime = performance.now();
-  const duration = 1150;
-  const tick = (now) => {
-    const progress = Math.min(1, (now - startTime) / duration);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    element.textContent = String(Math.round(end * eased));
-    if (progress < 1) window.requestAnimationFrame(tick);
-  };
-  window.requestAnimationFrame(tick);
+const githubActivity = document.querySelector("[data-github-activity]");
+const githubActivityGrid = githubActivity?.querySelector("[data-github-activity-grid]");
+const githubActivityStatus = githubActivity?.querySelector("[data-github-activity-status]");
+const ACTIVITY_WEEKS = 20;
+const ACTIVITY_DAYS = ACTIVITY_WEEKS * 7;
+
+function utcDateKey(date) {
+  return date.toISOString().slice(0, 10);
 }
 
-const counters = document.querySelectorAll("[data-count]");
-if ("IntersectionObserver" in window) {
-  const countObserver = new IntersectionObserver(
-    (entries, observer) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        animateCount(entry.target);
-        observer.unobserve(entry.target);
-      });
+function createActivityRange() {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const start = new Date(today);
+  start.setUTCDate(today.getUTCDate() - today.getUTCDay() - (ACTIVITY_WEEKS - 1) * 7);
+  return Array.from({ length: ACTIVITY_DAYS }, (_, index) => {
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + index);
+    return date;
+  });
+}
+
+function activityLevel(count) {
+  if (count <= 0) return 0;
+  if (count === 1) return 1;
+  if (count <= 3) return 2;
+  if (count <= 6) return 3;
+  return 4;
+}
+
+function renderGithubActivity(counts = new Map(), { loading = false } = {}) {
+  if (!githubActivityGrid) return { activeDays: 0, totalPushes: 0 };
+  let activeDays = 0;
+  let totalPushes = 0;
+  const todayKey = utcDateKey(new Date());
+  const cells = createActivityRange().map((date, index) => {
+    const key = utcDateKey(date);
+    const count = counts.get(key) ?? 0;
+    if (count > 0) activeDays += 1;
+    totalPushes += count;
+    const cell = document.createElement("i");
+    cell.dataset.level = String(loading ? (index % 11 === 0 ? 1 : 0) : activityLevel(count));
+    cell.setAttribute("aria-hidden", "true");
+    cell.title = key > todayKey ? `${key} · upcoming` : `${key} · ${count} public push${count === 1 ? "" : "es"}`;
+    return cell;
+  });
+  githubActivityGrid.replaceChildren(...cells);
+  return { activeDays, totalPushes };
+}
+
+async function loadGithubActivity() {
+  if (!githubActivity || !githubActivityGrid || !githubActivityStatus) return;
+  renderGithubActivity(new Map(), { loading: true });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch("https://api.github.com/users/LucPeloquin/events/public?per_page=100", {
+      headers: { Accept: "application/vnd.github+json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+    const events = await response.json();
+    const counts = new Map();
+    for (const event of events) {
+      if (event.type !== "PushEvent" || !event.created_at) continue;
+      const key = event.created_at.slice(0, 10);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const { activeDays, totalPushes } = renderGithubActivity(counts);
+    githubActivity.dataset.activityState = "ready";
+    githubActivityStatus.textContent = `${activeDays} active day${activeDays === 1 ? "" : "s"} · ${totalPushes} public push${totalPushes === 1 ? "" : "es"}`;
+    githubActivityGrid.setAttribute(
+      "aria-label",
+      `Recent public GitHub activity: ${totalPushes} pushes across ${activeDays} active days in the available event window.`,
+    );
+  } catch (error) {
+    console.warn("GitHub activity could not be loaded", error);
+    renderGithubActivity();
+    githubActivity.dataset.activityState = "fallback";
+    githubActivityStatus.textContent = "Live activity available on GitHub";
+    githubActivityGrid.setAttribute("aria-label", "Recent activity is temporarily unavailable. Open Jean-Luc's GitHub profile for live activity.");
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+loadGithubActivity();
+
+const aboutSection = document.querySelector("#about");
+const capabilityList = document.querySelector("[data-capability-list]");
+const capabilityCanvas = document.querySelector("[data-capability-canvas]");
+const capabilityStages = [...document.querySelectorAll("[data-capability-stage]")];
+let capabilityVisualController;
+let capabilityVisualLoading = false;
+
+async function loadCapabilityVisuals() {
+  if (!capabilityList || !capabilityCanvas || capabilityVisualController || capabilityVisualLoading) return;
+  capabilityVisualLoading = true;
+  capabilityList.dataset.capabilityRenderState = "loading";
+  try {
+    const { initCapabilityVisuals } = await import("./capability-visuals.js");
+    capabilityVisualController = initCapabilityVisuals(capabilityCanvas, capabilityStages, {
+      reducedMotion: prefersReducedMotion.matches,
+      theme: currentTheme(),
+    });
+  } catch (error) {
+    console.error("Capability 3D visuals failed to initialize", error);
+    capabilityList.dataset.capabilityRenderState = "fallback";
+    capabilityList.dataset.capabilityVisible = "false";
+  } finally {
+    capabilityVisualLoading = false;
+  }
+}
+
+if (aboutSection && capabilityCanvas && "IntersectionObserver" in window) {
+  const capabilityLoadObserver = new IntersectionObserver(
+    ([entry], observer) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      loadCapabilityVisuals();
     },
-    { threshold: 0.55 },
+    { rootMargin: "700px 0px", threshold: 0 },
   );
-  counters.forEach((counter) => countObserver.observe(counter));
-} else {
-  counters.forEach(animateCount);
+  capabilityLoadObserver.observe(aboutSection);
+} else if (capabilityCanvas) {
+  loadCapabilityVisuals();
 }
 
 const projectTabs = [...document.querySelectorAll("[data-project-tab]")];
@@ -323,7 +416,12 @@ const projectTags = document.querySelector("[data-project-tags]");
 const projectLink = document.querySelector("[data-project-link]");
 const projectCurrent = document.querySelector("[data-project-current]");
 const projectPanel = document.querySelector("#project-panel");
+const workSection = document.querySelector("#work");
+const workVisualStage = document.querySelector("[data-work-visual-stage]");
+const workVisualCanvas = document.querySelector("[data-work-visual-canvas]");
 let activeProject = 0;
+let workVisualController;
+let workVisualLoading = false;
 
 function renderProject(index, { focus = false } = {}) {
   activeProject = (index + projects.length) % projects.length;
@@ -353,6 +451,8 @@ function renderProject(index, { focus = false } = {}) {
     poster.classList.toggle("is-active", selected);
   });
 
+  workVisualController?.setProject(activeProject);
+
   const activeTab = projectTabs[activeProject];
   projectPanel?.setAttribute("aria-labelledby", activeTab?.id ?? "");
   activeTab?.scrollIntoView({ behavior: prefersReducedMotion.matches ? "auto" : "smooth", block: "nearest", inline: "center" });
@@ -371,6 +471,53 @@ projectTabs.forEach((tab, index) => {
 
 document.querySelector("[data-project-prev]")?.addEventListener("click", () => renderProject(activeProject - 1));
 document.querySelector("[data-project-next]")?.addEventListener("click", () => renderProject(activeProject + 1));
+
+async function loadWorkVisual() {
+  if (!workVisualCanvas || !workVisualStage || workVisualController || workVisualLoading) return;
+  workVisualLoading = true;
+  workVisualStage.dataset.workVisualState = "loading";
+  try {
+    const { initWorkVisual } = await import("./work-visual.js");
+    workVisualController = initWorkVisual(workVisualCanvas, workVisualStage, {
+      initialProject: activeProject,
+      reducedMotion: prefersReducedMotion.matches,
+      theme: currentTheme(),
+    });
+  } catch (error) {
+    console.error("Selected Work 3D visual failed to initialize", error);
+    workVisualStage.dataset.workVisualState = "fallback";
+    const status = workVisualStage.querySelector("[data-work-visual-status]");
+    if (status) status.textContent = "CSS / FALLBACK";
+  } finally {
+    workVisualLoading = false;
+  }
+}
+
+window.addEventListener("jl:theme", (event) => {
+  capabilityVisualController?.setTheme(event.detail?.theme ?? currentTheme());
+  workVisualController?.setTheme(event.detail?.theme ?? currentTheme());
+});
+
+if (workSection && workVisualStage && workVisualCanvas && "IntersectionObserver" in window) {
+  const workLoadObserver = new IntersectionObserver(
+    ([entry], observer) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      loadWorkVisual();
+    },
+    { rootMargin: "700px 0px", threshold: 0 },
+  );
+  workLoadObserver.observe(workSection);
+} else if (workVisualStage && workVisualCanvas) {
+  loadWorkVisual();
+}
+
+window.addEventListener("pagehide", (event) => {
+  if (!event.persisted) {
+    capabilityVisualController?.dispose();
+    workVisualController?.dispose();
+  }
+});
 
 const noteSlides = [...document.querySelectorAll("[data-note-slide]")];
 const noteCurrent = document.querySelector("[data-note-current]");
