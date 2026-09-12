@@ -1,7 +1,13 @@
 import "./style.css";
+import "./brand-system.css";
+import { initBrandSystem } from "./brand-system.js";
 import { LOGO_ASCII } from "./generated/logo-ascii.js";
 
 const root = document.documentElement;
+const brandSystem = initBrandSystem(document.body, {
+  reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  theme: root.dataset.theme === "dark" ? "dark" : "light",
+});
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const bootScreen = document.querySelector("[data-boot-screen]");
 const bootLogo = bootScreen?.querySelector("[data-boot-logo]");
@@ -141,6 +147,7 @@ function applyTheme(theme) {
     localStorage.setItem("jl-theme", theme);
   } catch (_) {}
   syncThemeControls();
+  brandSystem.setTheme(theme);
   window.dispatchEvent(new CustomEvent("jl:theme", { detail: { theme } }));
 }
 
@@ -452,6 +459,7 @@ function renderProject(index, { focus = false } = {}) {
   });
 
   workVisualController?.setProject(activeProject);
+  brandSystem.setActiveSection("work");
 
   const activeTab = projectTabs[activeProject];
   projectPanel?.setAttribute("aria-labelledby", activeTab?.id ?? "");
@@ -516,6 +524,7 @@ window.addEventListener("pagehide", (event) => {
   if (!event.persisted) {
     capabilityVisualController?.dispose();
     workVisualController?.dispose();
+    brandSystem.dispose();
   }
 });
 

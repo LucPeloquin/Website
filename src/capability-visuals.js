@@ -1,5 +1,6 @@
 import {
   ACESFilmicToneMapping,
+  AdditiveBlending,
   AmbientLight,
   BoxGeometry,
   BufferAttribute,
@@ -25,10 +26,13 @@ import {
   Points,
   PointsMaterial,
   Scene,
+  Sprite,
+  SpriteMaterial,
   SphereGeometry,
   SRGBColorSpace,
   TorusGeometry,
   TubeGeometry,
+  TextureLoader,
   Vector3,
   WebGLRenderer,
 } from "three";
@@ -586,7 +590,7 @@ export function initCapabilityVisuals(canvas, stages, { reducedMotion = false, t
 
   root.dataset.capabilityRenderState = "loading";
   root.dataset.capabilityVisible = "false";
-  const registry = { geometries: new Set(), lights: new Set(), materials: new Set() };
+  const registry = { geometries: new Set(), lights: new Set(), materials: new Set(), textures: new Set() };
   const palette = createPalette(theme);
   const paletteFrom = createPalette(theme);
   const paletteTo = createPalette(theme);
@@ -620,6 +624,36 @@ export function initCapabilityVisuals(canvas, stages, { reducedMotion = false, t
       buildDataScene(kit, registry, palette),
       buildInterfaceScene(kit, registry),
     ];
+
+    const textureLoader = new TextureLoader();
+    const brandTexturePaths = [
+      "/brand/vct22/masks/light-radial.svg",
+      "/brand/vct22/masks/light-convergence.svg",
+      "/brand/vct22/masks/light-diagonal.svg",
+      "/brand/vct22/masks/light-radial.svg",
+    ];
+    const brandLights = scenes.map(({ world }, index) => {
+      const material = new SpriteMaterial({
+        color: palette.gold,
+        depthWrite: false,
+        opacity: 0.075,
+        transparent: true,
+        blending: AdditiveBlending,
+      });
+      material.userData.tone = "gold";
+      registry.materials.add(material);
+      const sprite = new Sprite(material);
+      sprite.position.set(0, 0.9, -2.8);
+      sprite.scale.set(7.2, 4.1, 1);
+      sprite.renderOrder = -1;
+      world.add(sprite);
+      textureLoader.load(brandTexturePaths[index], (texture) => {
+        registry.textures.add(texture);
+        material.map = texture;
+        material.needsUpdate = true;
+      });
+      return sprite;
+    });
     scenes.forEach(({ scene }) => {
       scene.environment = environmentTexture;
     });
@@ -691,6 +725,9 @@ export function initCapabilityVisuals(canvas, stages, { reducedMotion = false, t
       lastFrameTime = now;
       applyPalette(now);
       scenes.forEach((view) => view.update?.(reducedMotion ? 0 : now));
+      brandLights.forEach((light, index) => {
+        light.material.opacity = (reducedMotion ? 0.055 : 0.075) + Math.sin(now * 0.0004 + index) * 0.012;
+      });
 
       renderer.setScissorTest(false);
       renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
@@ -808,6 +845,7 @@ export function initCapabilityVisuals(canvas, stages, { reducedMotion = false, t
       window.removeEventListener("jl:work-visual-activity", handleWorkActivity);
       registry.geometries.forEach((geometry) => geometry.dispose());
       registry.materials.forEach((material) => material.dispose());
+      registry.textures.forEach((texture) => texture.dispose());
       environmentTexture.dispose();
       pmremGenerator.dispose();
       roomEnvironment.dispose();

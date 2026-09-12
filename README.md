@@ -14,6 +14,7 @@ A responsive personal portfolio for Jean-Luc Peloquin, built as a precise editor
 - Accessible mobile navigation and contact dialogs with native focus trapping and Escape handling
 - Selectable project case studies and an autoplaying, user-pausable principles carousel
 - Self-hosted open-source fonts, optimized WebP portraits, and deterministic ASCII/SVG/GLB logo assets
+- Self-hosted VCT22-inspired display/semimono typography, eight utility glyphs, and five text-free light/grain masks tracked by a deterministic local manifest
 - Standalone privacy and 404 pages
 - GitHub Pages deployment workflow
 
@@ -50,6 +51,13 @@ Validate the shared capability renderer and enhanced hero asset:
 npm run check:capability-visuals
 ```
 
+Regenerate and validate the local VCT22-inspired brand primitives:
+
+```bash
+npm run assets:vct22
+npm run check:brand-system
+```
+
 ## Structure
 
 ```text
@@ -62,11 +70,14 @@ src/capability-visuals.js  Shared four-scene Three.js capability renderer
 src/work-visual.js      Shared Three.js renderer, controls, morphing, and lifecycle
 src/work-visual-states.js  Deterministic five-project procedural scene definitions
 scripts/logo-model.mjs  Deterministic alpha-to-ASCII/SVG/GLB generator and validator
+scripts/vct22-assets.mjs  Deterministic local font/glyph/light-mask manifest generator and validator
 scripts/check-work-visuals.mjs  Procedural scene and attribution validator
 scripts/check-capability-visuals.mjs  Capability renderer and hero-asset validator
 src/generated/          Generated ASCII logo module
+src/brand-system.js      Section lighting, glyph placement, theme, and lifecycle controller
+src/brand-system.css     Local VCT22-inspired type and visual-system overrides
 src/style.css           Design system and responsive layouts
-public/                 Optimized images, social card, and favicon
+public/                 Optimized images, brand primitives, social card, and favicon
 .github/workflows/      GitHub Pages deployment
 ```
 

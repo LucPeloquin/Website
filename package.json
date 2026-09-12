@@ -7,11 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "assets:vct22": "node scripts/vct22-assets.mjs --write",
     "generate:logo-model": "node scripts/logo-model.mjs --write",
     "check:logo-model": "node scripts/logo-model.mjs --check",
     "check:work-visuals": "node scripts/check-work-visuals.mjs",
     "check:capability-visuals": "node scripts/check-capability-visuals.mjs",
-    "check": "npm run check:logo-model && npm run check:work-visuals && npm run check:capability-visuals && npm run build"
+    "check:brand-system": "node scripts/vct22-assets.mjs --check",
+    "check": "npm run check:brand-system && npm run check:logo-model && npm run check:work-visuals && npm run check:capability-visuals && npm run build"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.6",

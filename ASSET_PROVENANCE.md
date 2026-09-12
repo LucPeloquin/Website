@@ -16,6 +16,14 @@
 - The Selected Work renderer distributes no ThreeUI package, React code, thumbnails, preview videos, Pro code, model, texture, or remote asset.
 - The recent-activity panel reads public push events from GitHub's public REST API at runtime. It distributes no GitHub image or user data snapshot and falls back to a profile link when live activity is unavailable.
 
+## Reference-derived VCT22 system primitives
+
+- `public/brand/vct22/manifest.json` is the reproducible inventory for the locally bundled display/semimono fonts, utility glyphs, and text-free grayscale light treatments used by the re-theme.
+- The local Satoshi and FK Grotesk SemiMono files are self-hosted authorized derivatives of the type resources used by the supplied [VCT22 case study](https://suleymanyazki.com/project/vct22). Their source URLs, SHA-256 hashes, and output paths are recorded in the manifest.
+- The eight glyphs and five light/grain masks are original traced or reconstructed system primitives derived from the reference’s abstract graphic language. They contain no readable campaign text, faces, trademarks, team/player marks, or recognizable campaign imagery.
+- `src/brand-system.js` and `src/brand-system.css` apply those local primitives to the portfolio’s existing content and interactive scenes. The deployed runtime makes no request to the reference site and does not redistribute the reference page, thumbnails, videos, or raw campaign artwork.
+- The reference-derived files are included under the user’s stated permission for extraction, modification, redistribution, and no visible attribution. This internal record is retained for auditability; no public credit block is displayed.
+
 ## Open-source fonts
 
 - [Manrope](https://github.com/sharanda/manrope), distributed under the SIL Open Font License 1.1.
