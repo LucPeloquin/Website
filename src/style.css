@@ -16,17 +16,19 @@
 
 :root {
   color-scheme: light;
-  --paper: #f7f7f3;
-  --paper-rgb: 247, 247, 243;
-  --ink: #232323;
-  --ink-rgb: 35, 35, 35;
+  --paper: #ffffff;
+  --paper-rgb: 255, 255, 255;
+  --ink: #131313;
+  --ink-rgb: 19, 19, 19;
   --muted: #6f706d;
   --line: rgba(35, 35, 35, 0.72);
   --soft-line: rgba(35, 35, 35, 0.28);
   --panel: #d9d9d5;
-  --signal: #a1ffcb;
-  --gold: #80621f;
-  --violet: #7956ff;
+  --signal: #c5b174;
+  --gold: #c5b174;
+  --gold-text: #756125;
+  --red: #dc3030;
+  --violet: #6f4acc;
   --shadow: rgba(0, 0, 0, 0.16);
   --artifact-stage: #d7d8d4;
   --artifact-ink-rgb: 24, 27, 28;
@@ -39,17 +41,18 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #181918;
-  --paper-rgb: 24, 25, 24;
-  --ink: #f1f1eb;
-  --ink-rgb: 241, 241, 235;
+  --paper: #131313;
+  --paper-rgb: 19, 19, 19;
+  --ink: #ffffff;
+  --ink-rgb: 255, 255, 255;
   --muted: #a7a8a2;
   --line: rgba(241, 241, 235, 0.68);
   --soft-line: rgba(241, 241, 235, 0.25);
   --panel: #343532;
-  --signal: #78dba7;
-  --gold: #d0aa59;
-  --violet: #9a82ff;
+  --signal: #c5b174;
+  --gold: #c5b174;
+  --gold-text: #c5b174;
+  --violet: #6f4acc;
   --shadow: rgba(0, 0, 0, 0.44);
 }
 
@@ -278,7 +281,7 @@ html.booting body {
   left: 12%;
   height: 1px;
   background: var(--signal);
-  box-shadow: 0 0 16px rgba(161, 255, 203, 0.52);
+  box-shadow: 0 0 16px rgba(197, 177, 116, 0.52);
   content: "";
   opacity: 0.72;
   transform: translateY(-34vh);
@@ -316,7 +319,7 @@ html.booting body {
   width: 100%;
   height: 100%;
   background: var(--signal);
-  box-shadow: 0 0 12px rgba(161, 255, 203, 0.42);
+  box-shadow: 0 0 12px rgba(197, 177, 116, 0.42);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 90ms linear;
@@ -388,7 +391,7 @@ html.booting body {
   width: var(--header-height);
   height: var(--header-height);
   border-right: 1px solid rgba(255, 255, 255, 0.16);
-  background: #101312;
+  background: #131313;
   color: #f4f4ef;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
@@ -922,6 +925,12 @@ html.booting body {
 
 .about-index-list li:last-child { border-right: 0; }
 
+.about-index-list li:nth-child(1) { box-shadow: inset 0 3px var(--gold); }
+.about-index-list li:nth-child(2) { box-shadow: inset 0 3px var(--red); }
+.about-index-list li:nth-child(3) { box-shadow: inset 0 3px var(--violet); }
+.capability:nth-of-type(2) .capability-number { border-top: 3px solid var(--red); }
+.capability:nth-of-type(3) .capability-number { border-top: 3px solid var(--violet); }
+
 .about-index-list span,
 .about-index-list small {
   font-family: var(--mono);
@@ -1279,8 +1288,8 @@ html.booting body {
 
 .visual-vision {
   --vision-paper: #eff1ea;
-  --vision-signal: #a1ffcb;
-  --vision-gold: #f1c66b;
+  --vision-signal: var(--gold);
+  --vision-gold: var(--red);
   --vision-field: #121614;
   isolation: isolate;
   background: #282d2a;
@@ -1290,8 +1299,8 @@ html.booting body {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(115deg, transparent 0 34%, rgba(161, 255, 203, 0.08) 34% 34.25%, transparent 34.25% 100%),
-    radial-gradient(circle at 76% 28%, rgba(241, 198, 107, 0.15), transparent 26%),
+    linear-gradient(115deg, transparent 0 34%, rgba(197, 177, 116, 0.08) 34% 34.25%, transparent 34.25% 100%),
+    radial-gradient(circle at 76% 28%, rgba(197, 177, 116, 0.15), transparent 26%),
     linear-gradient(rgba(239, 241, 234, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(239, 241, 234, 0.045) 1px, transparent 1px);
   background-size: auto, auto, 32px 32px, 32px 32px;
@@ -1306,7 +1315,7 @@ html.booting body {
   grid-template-rows: 2rem minmax(0, 1fr) 2rem;
   border: 1px solid rgba(239, 241, 234, 0.44);
   background: var(--vision-field);
-  box-shadow: 0.75rem 0.75rem 0 rgba(161, 255, 203, 0.09);
+  box-shadow: 0.75rem 0.75rem 0 rgba(197, 177, 116, 0.09);
   color: var(--vision-paper);
 }
 
@@ -1337,7 +1346,7 @@ html.booting body {
   height: 0.42rem;
   border-radius: 50%;
   background: var(--vision-signal);
-  box-shadow: 0 0 0 0 rgba(161, 255, 203, 0.5);
+  box-shadow: 0 0 0 0 rgba(197, 177, 116, 0.5);
   animation: vision-pulse 2s ease-out infinite;
 }
 
@@ -1456,7 +1465,7 @@ html.booting body {
 
 .vision-box-guide {
   fill: none;
-  stroke: rgba(161, 255, 203, 0.28);
+  stroke: rgba(197, 177, 116, 0.28);
   stroke-width: 1;
   stroke-dasharray: 3 5;
 }
@@ -1477,7 +1486,7 @@ html.booting body {
 
 .vision-reticle {
   fill: none;
-  stroke: rgba(161, 255, 203, 0.58);
+  stroke: rgba(197, 177, 116, 0.58);
   stroke-width: 1;
 }
 
@@ -1490,9 +1499,9 @@ html.booting body {
   right: 0;
   left: 0;
   height: 22%;
-  border-bottom: 1px solid rgba(161, 255, 203, 0.82);
-  background: linear-gradient(to bottom, transparent, rgba(161, 255, 203, 0.1));
-  box-shadow: 0 6px 16px rgba(161, 255, 203, 0.05);
+  border-bottom: 1px solid rgba(197, 177, 116, 0.82);
+  background: linear-gradient(to bottom, transparent, rgba(197, 177, 116, 0.1));
+  box-shadow: 0 6px 16px rgba(197, 177, 116, 0.05);
   animation: vision-scan 4.2s var(--ease) infinite;
   pointer-events: none;
 }
@@ -1507,8 +1516,8 @@ html.booting body {
 }
 
 @keyframes vision-pulse {
-  70% { box-shadow: 0 0 0 0.35rem rgba(161, 255, 203, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(161, 255, 203, 0); }
+  70% { box-shadow: 0 0 0 0.35rem rgba(197, 177, 116, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(197, 177, 116, 0); }
 }
 
 .vision-output {
@@ -2497,7 +2506,7 @@ html.booting body {
 
 .closing-cta span:nth-child(2) { margin-left: 15%; }
 .closing-cta span:nth-child(3) { margin-left: 30%; }
-.closing-cta span:nth-child(4) { margin-left: 49%; color: var(--gold); }
+.closing-cta span:nth-child(4) { margin-left: 49%; color: var(--gold-text); }
 .closing-cta i { position: absolute; right: 4%; top: 5%; font-size: clamp(3rem, 6vw, 6rem); font-style: normal; transition: transform 500ms var(--ease); }
 .closing-cta:hover span:nth-child(even) { transform: translateX(12px); }
 .closing-cta:hover span:nth-child(odd) { transform: translateX(-8px); }
@@ -2554,7 +2563,7 @@ html.booting body {
   text-transform: uppercase;
 }
 
-.site-footer a:hover { color: var(--signal); }
+.site-footer a:hover { color: var(--gold-text); }
 
 dialog {
   max-width: none;

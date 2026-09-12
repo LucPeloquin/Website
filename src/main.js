@@ -131,7 +131,7 @@ function syncThemeControls() {
   });
   document.querySelector('meta[name="theme-color"]')?.setAttribute(
     "content",
-    currentTheme() === "dark" ? "#181918" : "#f7f7f3",
+    currentTheme() === "dark" ? "#131313" : "#ffffff",
   );
 }
 

@@ -43,21 +43,25 @@ const PALETTES = {
     structure: 0x555c5a,
     metal: 0xa9b0b0,
     panel: 0xd6d9d5,
-    dark: 0x171b19,
+    dark: 0x131313,
     line: 0x333a37,
-    signal: 0x42b681,
-    gold: 0xa27c2f,
-    paper: 0xf0f1eb,
+    signal: 0xc5b174,
+    gold: 0xc5b174,
+    red: 0xdc3030,
+    purple: 0x6f4acc,
+    paper: 0xffffff,
   },
   dark: {
     structure: 0xd9ddda,
     metal: 0x737b79,
     panel: 0x3a3f3c,
-    dark: 0x111513,
+    dark: 0x131313,
     line: 0xe7ece8,
-    signal: 0x69dda4,
-    gold: 0xd1aa59,
-    paper: 0xf2f3ed,
+    signal: 0xc5b174,
+    gold: 0xc5b174,
+    red: 0xdc3030,
+    purple: 0x6f4acc,
+    paper: 0xffffff,
   },
 };
 
@@ -95,7 +99,7 @@ function addSceneLighting(scene, registry) {
 
   const rim = new DirectionalLight(0xffffff, 2.1);
   rim.position.set(-5, 2.5, -5.5);
-  rim.userData.tone = "signal";
+  rim.userData.tone = "paper";
   registry.lights.add(rim);
   scene.add(rim);
 }
@@ -305,7 +309,7 @@ function buildVisionScene(kit, registry) {
     [0.85, 0.55, -1.42, 1.15, 0.85, 0.22],
     [1.25, -0.65, -1.38, 1.42, 0.62, 0.2],
   ].map(([x, y, z, width, height, depth], index) => {
-    const box = kit.wireBox(width, height, depth, index ? "gold" : "signal", 0.92);
+    const box = kit.wireBox(width, height, depth, index ? "red" : "signal", 0.92);
     box.position.set(x, y, z);
     world.add(box);
     return box;
@@ -403,7 +407,7 @@ function buildDataScene(kit, registry, palette) {
   const seamPositions = new Float32Array(rows * 3);
   const seamGeometry = kit.geometry(new BufferGeometry());
   seamGeometry.setAttribute("position", new BufferAttribute(seamPositions, 3));
-  const seam = new Line(seamGeometry, kit.material("line", "signal", { opacity: 0.95, transparent: true }));
+  const seam = new Line(seamGeometry, kit.material("line", "purple", { opacity: 0.95, transparent: true }));
   seam.renderOrder = 4;
   world.add(seam);
 
